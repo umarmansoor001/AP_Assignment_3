@@ -11,8 +11,8 @@ import java.io.BufferedReader;
 public class threads extends Thread {
 
 	String file_name;
-	public static TreeSet<String> ts;//=new TreeSet<String>();//using API to create AVL tree
-	public static Vector<String> vs;//=new Vector<String>();//using API to create Vectors
+	public TreeSet<String> ts;//using API to create AVL tree
+	public Vector<String> vs;//using API to create Vectors
 	
 	threads(String file)
 	{
@@ -22,7 +22,12 @@ public class threads extends Thread {
 		else
 			vs=new Vector<String>();
 	}
-	
+	//getter functions
+	public String get_filename()
+	{
+		return this.file_name;
+	}
+	//BST creation function 
 	public void make_BST()
 	{
 		//Creating FileReader and BufferedReader to read file 
@@ -47,48 +52,42 @@ public class threads extends Thread {
 		}
 		catch(Exception e)
 		{
-			
+			System.out.print("Error! File not Found");
 		}
 	}
-	synchronized public void make_vectors()
+	//Vector creation function
+	public void make_vectors()
 	{
 		//Creating FileReader and BufferedReader to read file 
-				FileReader FS;
-				BufferedReader bf;
-				try {
-					//Making objects
-					FS=new FileReader(file_name);
-					bf=new BufferedReader(FS);
-					String aline;//data will store in it after reading file
-					//Vector<String> vs=new Vector<String>();
-					//reading file
-					while((aline=bf.readLine()) != null)
-					{
-						String[] words=aline.split(" ");//Splitting the whole line 
-						//Adding words into vectors from words array
-						for(int i=0; i < words.length; ++i)
-							vs.add(words[i]);
-					}
-					//When one file will be completely read and stored in vector then
-					//putting ( . ) period in Vector to differentiate files contents
-					vs.add(".");
-					
-					//closing file as it is very necessary
-					FS.close();
-					
-					//System.out.println(vs);
-					//for(String word : vs)
-						//System.out.print(word+" ");
-					//System.out.println();
-				}
-				catch(Exception e) 
+		FileReader FS;
+		BufferedReader bf;
+		synchronized (this)
+		{
+			try {
+				//Making objects
+				FS=new FileReader(file_name);
+				bf=new BufferedReader(FS);
+				String aline;//data will store in it after reading file
+				//reading file
+				while((aline=bf.readLine()) != null)
 				{
-					
+					String[] words=aline.split(" ");//Splitting the whole line 
+					//Adding words into vectors from words array
+					for(int i=0; i < words.length; ++i)
+						vs.add(words[i]);
 				}
+				
+				//closing file as it is very necessary
+				FS.close();
+			}
+			catch(Exception e) 
+			{
+				System.out.print("Error! File not Found");
+			}
+		}
 	}
 	public void run()
 	{
-
 			//IF file is vocabulary.txt then i need to make BST of that file's content
 			if(this.file_name.equals("vocabulary.txt")) 
 			{	
@@ -97,8 +96,17 @@ public class threads extends Thread {
 			}
 			else
 			{
-						this.make_vectors();
+				this.make_vectors();
 			}
+	}
+	public void menu()
+	{
+		//Menu
+		System.out.println("Enter 1 to Display BST from Vocabulary file");
+		System.out.println("Enter 2 to Display Vectors from Input files");
+		System.out.println("Enter 3 to View match words and frequency");
+		System.out.println("Enter 4 to Search a query-> it should display all the files query found in");
+		System.out.println("Enter 5 to Exit");
 	}
 	
 	public static void main(String[] args) throws InterruptedException {
@@ -108,39 +116,52 @@ public class threads extends Thread {
 		System.out.println("Name of Files:- ");
 		for(int i=0; i < args.length; ++i)
 		{
-			//creating thread named it as file's name 
+			//creating thread and named it as file's name 
 			t[i]=new threads(args[i]);
 			t[i].setName(args[i]);//setting name
-			System.out.println(args[i]);
+			System.out.println(t[i].getName());//Printing name of thread which is actually file's name
 		}
 		System.out.println("No. of files: " + args.length);//displaying number of files
 		//and Starting all threads
-		for(int i=args.length-1; i >= 0 ; --i)
-			t[i].start();
-		//main thread should have to wait for some time so threads will complete their task
+		for(int i=0; i < args.length ; ++i)
+			t[i].start();//go on and do your job
+		//main thread should have to sleep for some time so other threads will complete their task
 		sleep(1000);
-		int choice;
-		//Menu
-		System.out.println("Enter 1 to Display BST from Vocabulary file");
-		System.out.println("Enter 2 to Display Vectors from Input files");
-		System.out.println("Enter 3 to Exit");
-		System.out.println(t[1].vs);
-		System.out.println(t[0].ts);
-	//	Scanner input=new Scanner(System.in);
+		int choice = 0;
+		
+		
+		Scanner input=new Scanner(System.in);
 //		System.out.println(t[1].file_name);
 //		System.out.println(t[0].file_name);
 //		
 //		System.out.println(t[2].file_name);
-//		try 
-//		{
-//			choice=input.nextInt();
-//			//if(choice < 0 || choice > 3)
-//				//throw new OutofLimit("Out of Limit");
-//		}
-//		catch(Exception e)
-//		{
-//			System.out.print(e);
-//		}
-//		
+		while(choice != 5)
+		{
+			try 
+			{
+				choice=input.nextInt();
+				//if(choice < 0 || choice > 3)
+					//throw new OutofLimit("Out of Limit");
+				if(choice == 1)
+				{
+					System.out.println("Binary search tree from Vocabulary file: ");
+					System.out.println(t[0].ts);
+				}
+				else if(choice == 2)
+				{
+					for(int i=1; i < args.length; ++i)
+					{
+						System.out.print("Vector from "+ t[i].file_name +" file is ");
+						System.out.println(t[i].vs);
+					}
+				}	
+				else if(choice == 5)
+					break;
+			}
+			catch(Exception e)
+			{
+				System.out.print(e);
+			}
+		}
 	}
 };
